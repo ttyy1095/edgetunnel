@@ -1,15 +1,28 @@
 name: Deploy to Cloudflare Pages
 on:
   push:
-    branches: [main]   # 换成你实际的生产分支名
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy
-        uses: cloudflare/wrangler-action@v3
+      - uses: actions/checkout@v5          # 升级至 v5，适配 Node 24
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'               # 使用活跃的 Node LTS 版本
+          cache: 'npm'                     # 缓存依赖，加速后续运行
+          
+      - name: Install dependencies
+        run: npm ci                        # 或 npm install，确保依赖已安装
+          
+      - name: Build project
+        run: npm run build                 # 关键！生成部署产物（如 dist 目录）
+          
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v4 # 升级至 v4，适配 Node 24
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
